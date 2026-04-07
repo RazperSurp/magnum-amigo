@@ -9,6 +9,8 @@ export class SocketServer extends BaseModule {
     _heartbeat;
     get heartbeat() { return this._heartbeat; }
     set heartbeat(value) {
+        
+
         if (this._pulseInterval !== null && this._pulseInterval !== undefined) clearInterval(this._pulseInterval);
 
         this._heartbeat = value;
@@ -17,11 +19,13 @@ export class SocketServer extends BaseModule {
 
     constructor(coreObject) {
         super(coreObject);
+    }
 
-        this._server = new WebSocketServer({ port: this._core.config.websocket.port });
+    start() {
+        this._server = new WebSocketServer({ port: this.config.port });
         this._server.on('connection', this._onConnection);
 
-        this.heartbeat = this._core.config.websocket.heartbeat;
+        this.heartbeat = this.config.heartbeat;
     }
 
     _onConnection(socket) {
@@ -31,7 +35,7 @@ export class SocketServer extends BaseModule {
         socket.on('close', this._onClose);
         socket.on('message', this._onMessage);
     }
-    
+
     _onClose(event) {}
     
     _onMessage(event) {}
@@ -40,8 +44,8 @@ export class SocketServer extends BaseModule {
 
     #authUser(socket) {
         socket.alive = true;
-        socket.token = this._core._modules.Toolbox.generateRandomString();
-        socket.socketClient = () => { return this._core._modules.SocketClientTable.findByToken(socket.token) }
+        socket.token = this._core.Toolbox.generateRandomString();
+        socket.socketClient = () => { return this._core.SocketClientTable.findByToken(socket.token) }
 
 
     }

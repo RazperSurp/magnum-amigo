@@ -5,7 +5,7 @@ export class Logger extends BaseModule {
         super(coreObject);
 
         this.wrapMethods(this._core);
-        for (const [module, instance] of Object.entries(this._core._modules))  this.wrapMethods(instance);
+        for (const [module, instance] of Object.entries(this._core._modules)) this.wrapMethods(instance);
     }
 
     static _getClassMethods(toCheck) {
@@ -26,11 +26,15 @@ export class Logger extends BaseModule {
 
             moduleInstance[method] = (...args) =>{
                 let result = moduleInstance[`${method}_loggerUnwrapped`](...args);
-                console.log(`Logger: called ${moduleInstance.name}.${method}(${args.join(', ')}) - got ${result ?? 'null'}`);
+                if (this.config.doAnnounceCalling) this.write(this.name, `Called ${moduleInstance.name}.${method}(${args.join(', ')}) - got ${result ?? 'null'}`);
                 return result;
             }
             
-            console.log(`Logger: wrapped ${moduleInstance.name}.${method}()`);
+            if (this.config.doAnnounceWrapping) this.write(this.name, `Wrapped ${moduleInstance.name}.${method}()`);
         }
+    }
+
+    write(module, data, type = 'log') {
+        console[type](`${this.config.doAddTimestamp ? `<${Math.floor(Date.now() / 1000)}> ` : ''}${module}: ${data}`);
     }
 }

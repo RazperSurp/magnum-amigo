@@ -1,48 +1,62 @@
 {
-    "websocket": {
-        "port": "8082",
-        "heartbeat": "30",
-        "clients": {
-            "doAllowMultipleConnections": true
-        },
-        "message_types": {
-            "AUTH_REQUEST": "0x0101",
-            "AUTH_SUCCESS": "0x0102",
-            "REQUEST_USERS": "0x0201",
-            "USER_ACTIVITY_PAUSE": "0x0301",
-            "USER_ACTIVITY_RESUME": "0x0302"
-        }
+    "websocket_message_types": {
+        "auth_request": "0x0101",
+        "auth_success": "0x0102",
+        "request_users": "0x0201",
+        "user_activity_pause": "0x0301",
+        "user_activity_resume": "0x0302"
     },
     "modules": {
         "Toolbox": {
             "isEnabled": true,
             "dependencies": [],
             "doWrapWithLogger": true,
-            "subPath": "/"
+            "subPath": "/",
+            "config": {}
+        },
+        "SocketConnection": {
+            "isEnabled": true,
+            "dependencies": [],
+            "doWrapWithLogger": true,
+            "subPath": "/ws/",
+            "config": {}
         },
         "SocketClient": {
-            "isEnabled": false,
-            "dependencies": [],
+            "isEnabled": true,
+            "dependencies": ["SocketConnection"],
             "doWrapWithLogger": true,
-            "subPath": "/ws/"
+            "subPath": "/ws/",
+            "config": {
+                "doAllowMultipleConnections": true
+            }
         },
         "SocketClientTable": {
-            "isEnabled": false,
-            "dependencies": [],
+            "isEnabled": true,
+            "dependencies": ["SocketConnection", "SocketClient"],
             "doWrapWithLogger": true,
-            "subPath": "/ws/"
+            "subPath": "/ws/",
+            "config": {}
         },
         "SocketServer": {
             "isEnabled": true,
-            "dependencies": ["Toolbox"],
+            "dependencies": ["SocketConnection", "SocketClient", "SocketClientTable", "Toolbox"],
             "doWrapWithLogger": true,
-            "subPath": "/ws/"
+            "subPath": "/ws/",
+            "config": {
+                "port": "8082",
+                "heartbeat": "30"
+            }
         },
         "Logger": {
-            "isEnabled": false,
+            "isEnabled": true,
             "dependencies": [],
             "doWrapWithLogger": false,
-            "subPath": "/"
+            "subPath": "/",
+            "config": {
+                "doAnnounceWrapping": true,
+                "doAnnounceCalling": true,
+                "doAddTimestamp": true
+            }
         }
     }
 }
