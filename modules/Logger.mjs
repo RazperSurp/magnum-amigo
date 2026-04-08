@@ -1,12 +1,7 @@
 import BaseModule from './BaseModule.mjs';
 
 export class Logger extends BaseModule {
-    constructor(coreObject) {
-        super(coreObject);
-
-        this.wrapMethods(this._core);
-        for (const [module, instance] of Object.entries(this._core._modules)) this.wrapMethods(instance);
-    }
+    constructor(coreObject) { super(coreObject); }
 
     static _getClassMethods(toCheck) {
         const props = [];
@@ -25,6 +20,7 @@ export class Logger extends BaseModule {
             moduleInstance[`${method}_loggerUnwrapped`] = moduleInstance[method];
 
             moduleInstance[method] = (...args) =>{
+                if (this.config.doAnnounceCalling) this.write(this.name, `Called ${moduleInstance.name}.${method}(${args.join(', ')}) ...processing`);
                 let result = moduleInstance[`${method}_loggerUnwrapped`](...args);
                 if (this.config.doAnnounceCalling) this.write(this.name, `Called ${moduleInstance.name}.${method}(${args.join(', ')}) - got ${result ?? 'null'}`);
                 return result;
@@ -32,6 +28,8 @@ export class Logger extends BaseModule {
             
             if (this.config.doAnnounceWrapping) this.write(this.name, `Wrapped ${moduleInstance.name}.${method}()`);
         }
+
+        moduleInstance.write = (data, type = 'log') => { this.write(moduleInstance.name, data, type); }
     }
 
     write(module, data, type = 'log') {

@@ -1,5 +1,6 @@
 {
     "websocket_message_types": {
+        "unspecified": "0x0001",
         "auth_request": "0x0101",
         "auth_success": "0x0102",
         "request_users": "0x0201",
@@ -7,55 +8,57 @@
         "user_activity_resume": "0x0302"
     },
     "modules": {
+        "Logger": {
+            "isEnabled": true,
+            "dependencies": [],
+            "subPath": "/",
+            "doKeepInstanceAsModule": true,
+            "config": {
+                "doWrapWithLogger": false,
+                "doAnnounceWrapping": true,
+                "doAnnounceCalling": true,
+                "doAddTimestamp": true
+            }
+        },
         "Toolbox": {
             "isEnabled": true,
             "dependencies": [],
-            "doWrapWithLogger": true,
             "subPath": "/",
-            "config": {}
-        },
-        "SocketConnection": {
-            "isEnabled": true,
-            "dependencies": [],
-            "doWrapWithLogger": true,
-            "subPath": "/ws/",
-            "config": {}
+            "doKeepInstanceAsModule": true,
+            "config": {
+                "doWrapWithLogger": true
+            }
         },
         "SocketClient": {
             "isEnabled": true,
-            "dependencies": ["SocketConnection"],
-            "doWrapWithLogger": true,
+            "dependencies": [],
             "subPath": "/ws/",
+            "doKeepInstanceAsModule": false,
             "config": {
+                "doWrapWithLogger": true,
                 "doAllowMultipleConnections": true
             }
         },
         "SocketClientTable": {
             "isEnabled": true,
-            "dependencies": ["SocketConnection", "SocketClient"],
-            "doWrapWithLogger": true,
+            "dependencies": ["SocketClient"],
             "subPath": "/ws/",
-            "config": {}
+            "doKeepInstanceAsModule": true,
+            "config": {
+                "doWrapWithLogger": true
+            }
         },
         "SocketServer": {
             "isEnabled": true,
-            "dependencies": ["SocketConnection", "SocketClient", "SocketClientTable", "Toolbox"],
-            "doWrapWithLogger": true,
+            "dependencies": ["Logger", "SocketClient", "SocketClientTable", "Toolbox"],
+            "doKeepInstanceAsModule": true,
             "subPath": "/ws/",
             "config": {
+                "doLogOutcomingMessages": true,
+                "doLogIncomingMessages": true,
+                "doWrapWithLogger": true,
                 "port": "8082",
                 "heartbeat": "30"
-            }
-        },
-        "Logger": {
-            "isEnabled": true,
-            "dependencies": [],
-            "doWrapWithLogger": false,
-            "subPath": "/",
-            "config": {
-                "doAnnounceWrapping": true,
-                "doAnnounceCalling": true,
-                "doAddTimestamp": true
             }
         }
     }

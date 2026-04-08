@@ -14,6 +14,7 @@ export class Core extends BaseModule {
         console.log('==[ Initialization started ]==');
         let instance = new Core();
         await instance._importModules();
+        instance.Logger.wrapMethods(instance);
         console.log('==[ Initialization complete ]==');
 
         return instance;
@@ -27,12 +28,12 @@ export class Core extends BaseModule {
         console.log(`== importing modules`);
         if (modulesList.length) for (const module of modulesList) {
             try {
-                console.log(`= importing ./modules${config.modules[module].subPath}${module}.mjs`)
+                console.log(`= importing ./modules${this._config.modules[module].subPath}${module}.mjs`)
                 if (this._modules.hasOwnProperty(module)) console.log(`---- already imported`);
                 else {
-                    if (config.modules[module].dependencies.length) {
+                    if (this._config.modules[module].dependencies.length) {
                         console.log('---- checking dependencies');
-                        config.modules[module].dependencies.forEach(dependency => {
+                        this._config.modules[module].dependencies.forEach(dependency => {
                             if (!this._modules.hasOwnProperty(dependency)) {
                                 console.error(`-------- ${String(dependency+'.mjs').padEnd(25, ' ')}\tX`);
                                 dependencyValidation = false;
@@ -42,10 +43,13 @@ export class Core extends BaseModule {
                     }
 
                     if (dependencyValidation) {
-                        const resolve = await import(`./modules${config.modules[module].subPath}${module}.mjs`);
-                        this._modules[module] = new resolve[module](this);
+                        const resolve = await import(`./modules${this._config.modules[module].subPath}${module}.mjs`);
+                        if (this._config.modules[module].doKeepInstanceAsModule) {
+                            this._modules[module] = new resolve[module](this);
+                        } else this._modules[module] = resolve[module];
+                        
                         this[module] = this._modules[module];
-                        console.log(`= success!`);
+                        console.log(`= successfully imported as ${this._config.modules[module].doKeepInstanceAsModule ? 'instance' : 'class'}!`);
                     } else {
                         errCount++;
                         console.error(`= failed`); 
@@ -64,6 +68,7 @@ export class Core extends BaseModule {
 }
 
 let core = await Core.init();
-core.SocketServer.start();
+
+core.SocketServer.start(); 
 
 setTimeout(() => {}, 3600*1000)
