@@ -1,11 +1,18 @@
 {
     "websocket_message_types": {
         "unspecified": "0x0001",
-        "auth_request": "0x0101",
-        "auth_success": "0x0102",
-        "request_users": "0x0201",
-        "user_activity_pause": "0x0301",
-        "user_activity_resume": "0x0302"
+
+        "authRequest": "0x0101",
+        "authSuccess": "0x0102",
+        "authRegister": "0x0103",
+        "authUnauthorized": "0x0104",
+        "authInvalid": "0x0105",
+        "authForbidden": "0x0106",
+
+        "requestUsers": "0x0201",
+
+        "userActivityPause": "0x0301",
+        "userActivityResume": "0x0302"
     },
     "modules": {
         "Logger": {
@@ -48,14 +55,33 @@
                 "doWrapWithLogger": true
             }
         },
+        "SocketMessage": {
+            "isEnabled": true,
+            "dependencies": [],
+            "subPath": "/ws/",
+            "doKeepInstanceAsModule": false,
+            "config": {
+                "doWrapWithLogger": true,
+                "doParseUnknownAsUnspecified": false
+            }
+        },
+        "SocketConnection": {
+            "isEnabled": true,
+            "dependencies": ["SocketMessage", "SocketClientTable"],
+            "subPath": "/ws/",
+            "doKeepInstanceAsModule": false,
+            "config": {
+                "doWrapWithLogger": true,
+                "doLogOutcomingMessages": true,
+                "doLogIncomingMessages": true
+            }
+        },
         "SocketServer": {
             "isEnabled": true,
-            "dependencies": ["Logger", "SocketClient", "SocketClientTable", "Toolbox"],
+            "dependencies": ["Logger", "SocketConnection", "Toolbox"],
             "doKeepInstanceAsModule": true,
             "subPath": "/ws/",
             "config": {
-                "doLogOutcomingMessages": true,
-                "doLogIncomingMessages": true,
                 "doWrapWithLogger": true,
                 "port": "8082",
                 "heartbeat": "30"
