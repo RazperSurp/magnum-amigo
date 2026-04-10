@@ -15,21 +15,21 @@ export class Logger extends BaseModule {
     }
 
     wrapMethods(moduleInstance){
-        const moduleMethods = Logger._getClassMethods(moduleInstance);
+        const moduleMethods = Logger._getClassMethods(moduleInstance).filter(method => { return !Object.keys(this._core._modules).find(module => module === method) });
         for (const method of moduleMethods){
             moduleInstance[`${method}_loggerUnwrapped`] = moduleInstance[method];
 
             moduleInstance[method] = (...args) =>{
-                if (this.config.doAnnounceCalling) this.write(this.name, `Called ${moduleInstance.name}.${method}(${args.join(', ')}) ...processing`);
+                if (this.config.doAnnounceCalling) this.write(this.class, `Called ${moduleInstance.class}.${method}(${args.join(', ')}) ...processing`);
                 let result = moduleInstance[`${method}_loggerUnwrapped`](...args);
-                if (this.config.doAnnounceCalling) this.write(this.name, `Called ${moduleInstance.name}.${method}(${args.join(', ')}) - got ${result ?? 'null'}`);
+                if (this.config.doAnnounceCalling) this.write(this.class, `Called ${moduleInstance.class}.${method}(${args.join(', ')}) - got ${result ?? 'null'}`);
                 return result;
             }
             
-            if (this.config.doAnnounceWrapping) this.write(this.name, `Wrapped ${moduleInstance.name}.${method}()`);
+            if (this.config.doAnnounceWrapping) this.write(this.class, `Wrapped ${moduleInstance.class}.${method}()`);
         }
 
-        moduleInstance.write = (data, type = 'log') => { this.write(moduleInstance.name, data, type); }
+        moduleInstance.write = (data, type = 'log') => { this.write(moduleInstance.class, data, type); }
     }
 
     write(module, data, type = 'log') {

@@ -37,6 +37,7 @@ export class SocketServer extends BaseModule {
     }
 
     pulse() {
-        
+        console.log(this._core.SocketClientTable.items);
+        return this._core.SocketClientTable.items.length;
     }
 }

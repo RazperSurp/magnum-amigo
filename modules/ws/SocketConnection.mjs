@@ -9,36 +9,36 @@ export class SocketConnection extends BaseModule {
         while (true) yield i++;
     }
 
-    #id = SocketConnection.idNext;
-    get id() { return this.#id; }
+    _id = SocketConnection.idNext;
+    get id() { return this._id; }
 
-    #isAuthorized = false;
-    get isAuthorized() { return this.#isAuthorized; }
-    set isAuthorized(value) { this.#isAuthorized = !!(value === true); }
+    _isAuthorized = false;
+    get isAuthorized() { return this._isAuthorized; }
+    set isAuthorized(value) { this._isAuthorized = !!(value === true); }
 
-    #isActive = true;
-    get isActive() { return this.#isActive; }
-    set isActive(value) { this.#isActive = !!(value === true); }
+    _isActive = true;
+    get isActive() { return this._isActive; }
+    set isActive(value) { this._isActive = !!(value === true); }
 
-    #isAlive = true;
-    get isAlive() { return this.#isAlive; }
+    _isAlive = true;
+    get isAlive() { return this._isAlive; }
     set isAlive(value) { 
-        this.#isAlive = !!(value === true);
-        if (!this.#isAlive) this.socket 
+        this._isAlive = !!(value === true);
+        if (!this._isAlive) this.socket 
     }
 
-    #socket;
-    get socket() { return this.#socket; } 
+    _socket;
+    get socket() { return this._socket; } 
 
-    #socketClient;
+    _socketClient;
     get socketClient() {
-        return this.#socketClient;    
+        return this._socketClient;    
     }
 
     get meta() {
         return {
             id: this.id,
-            token: this.token,
+            token: this.socketClient?.token,
             isAlive: this.isAlive,
             isActive: this.isActive
         }
@@ -47,33 +47,40 @@ export class SocketConnection extends BaseModule {
     constructor(coreObject, socket) {
         super(coreObject);
 
-        this.#socket = socket;
-        this.#socket.on('pong', this._onPong);
-        this.#socket.on('close', this._onClose);
-        this.#socket.on('message', this._onMessage);
-
-        this.send()
+        this._socket = socket;
+        this._socket.on('pong', this._onPong);
+        this._socket.on('close', this._onClose);
+        this._socket.on('message', this._onMessage);
     }
 
-    #auth(message) {
-        let socketClient; 
-        if (message.token) socketClient = this._core.SocketClientTable.getOne('token', token);
-        if (socketClient === null || !message.token) socketClient = this._core.SocketClientTable.push(new this._core.SocketClient(this._core, this._core.Toolbox.generateRandomString()));
+    _auth(message) {
+        if (message.token) this._socketClient = this._core.SocketClientTable.find('token', message.token);
+        if (!this._socketClient || !message.token) {
+            this._socketClient = this._core.SocketClientTable.push(new this._core.SocketClient(this._core, message.token ?? this._core.Toolbox.generateRandomString()));
+        }
 
-
-        socketClient.pushSocketConnection(this);
+        this._socketClient.pushSocketConnection(this);
         this.isAuthorized = true;
 
+        this.send(this.meta, this._core.SocketMessage.types.authSuccess);
     }
 
     
     _onMessage(event) {
         if (this.isAlive) {
             const message = this._core.SocketMessage.newInput(this._core, event.toString());
-            if (!this.isAuthorized && message.type == this._core.SocketMessage.types.authRequest) this.#auth(message);
+            if (!this.isAuthorized && message.type == this._core.SocketMessage.types.authRequest) this._auth(message.data);
             else if (!this.isAuthorized && message.type != this._core.SocketMessage.types.authRequest) this.sendEmpty(this._core.SocketMessage.types.authUnauthorized);
             else {
-
+                switch (message.type) {
+                    case this._core.SocketMessage.types.userActivityPause:
+                        this._isActive = false;
+                        break;
+                    case this._core.SocketMessage.types.userActivityResume:
+                        this._isActive = true;
+                        break;
+                    default:
+                }
             }
         }
     }
@@ -88,11 +95,11 @@ export class SocketConnection extends BaseModule {
     send(data = {}, type = null) {
         let message = this._core.SocketMessage.newOutput(this._core, data, type);
 
-        this.#socket.send(message.json);
+        this._socket.send(message.json);
         if (this.config.doLogOutcomingMessages) {
-            this.write(`+++[ ${type} -> ${socket.id} ]+++`);
-            console.log(data);
-            this.write(`---[ ${type} -> ${socket.id} ]---`);
+            this.write(`+++[ ${message.type} -> ${this.socket.id} ]+++`);
+            console.log(message.data);
+            this.write(`---[ ${message.type} -> ${this.socket.id} ]---`);
         }
     } 
 }

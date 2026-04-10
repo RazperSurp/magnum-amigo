@@ -1,7 +1,7 @@
 import BaseModule from "./BaseModule.mjs";
 
-class BaseCollection extends BaseModule {
-    items;
+export class BaseCollection extends BaseModule {
+    items = [];
 
     constructor(coreObject) {
         super(coreObject);
@@ -17,5 +17,6 @@ class BaseCollection extends BaseModule {
 
     push(item) {
         this.items.push(item);
+        return item;
     }
 } 

@@ -2,8 +2,8 @@ import config from "../../config.json" with { type: 'json' }
 import BaseModule from "../BaseModule.mjs";
 
 export class SocketMessage extends BaseModule {
-    static types() { return config.websocket_message_types;  }
-    static defaultType() { return this.types.unspecified; }
+    static get types() { return config.websocket_message_types;  }
+    static get defaultType() { return SocketMessage.types.unspecified; }
 
     static newInput(coreObject, json) {
         return new SocketMessage(coreObject, json);
@@ -17,18 +17,18 @@ export class SocketMessage extends BaseModule {
         return instance;
     } 
 
-    #isOutput;
-    get isOutput() { return this.#isOutput }
+    _isOutput;
+    get isOutput() { return this._isOutput }
 
-    #type = SocketMessage.defaultType;
-    get type() { return this.#type }
+    _type = SocketMessage.defaultType;
+    get type() { return this._type }
     set type(value) {
         if (value === null || value === undefined) {
-            this.#type = SocketMessage.defaultType;
-        } else if (!Object.values(this.types).find(type => type !== value)) {
+            this._type = SocketMessage.defaultType;
+        } else if (!Object.values(SocketMessage.types).find(type => type !== value)) {
             this.write(`Type "${value}" is unknown. Using ${SocketMessage.defaultType} (unspecified) instead`, `warn`);
-            this.#type = SocketMessage.defaultType;
-        } else this.#type = value;
+            this._type = SocketMessage.defaultType;
+        } else this._type = value;
     }
 
 
@@ -41,29 +41,14 @@ export class SocketMessage extends BaseModule {
     constructor(coreObject, incomingJson = null) {
         super(coreObject);
 
-        this.#isOutput = incomingJson === null; 
-        if (!this.#isOutput) this.parseInput(incomingJson);
-    }
+        if (incomingJson !== null) {
+            this._isOutput = false;
 
-    parseInput(json) {
-        const message = JSON.parse(json);
-        this.type = message.type;
-        this.data = message.data;
+            const message = JSON.parse(incomingJson);
+            this.type = message.type;
+            this.data = message.data;
 
-        switch (this.type) {
-            case this.types.unspecified:
-                break;
-            case this.types.authRequest:
-                break;
-            case this.types.requestUsers:
-                break;
-            case this.types.userActivityPause:
-                break;
-            case this.types.userActivityResume:
-                break;
-            default: 
-                this.write(`Got unknown type of message: ${this.type}, ${this.config.doParseUnknownAsUnspecified ? 'parsing as unspecified' : 'skipping'}`, 'warn');
-                if (this.config.doParseUnknownAsUnspecified) {/* ... why did i added this setting? */}
+            console.log(this.body);
         }
-    }   
+    }
 }

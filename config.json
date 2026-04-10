@@ -84,7 +84,7 @@
             "config": {
                 "doWrapWithLogger": true,
                 "port": "8082",
-                "heartbeat": "30"
+                "heartbeat": "2"
             }
         }
     }
